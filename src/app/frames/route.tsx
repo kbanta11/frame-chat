@@ -1,6 +1,7 @@
 import { Button } from "frames.js/core";
 import { frames } from "./frames";
 import { UrlObject } from "url";
+import { getFrameMessage } from "frames.js";
  
 const handleRequest = frames(async (ctx) => {
   const base = new URL(
@@ -12,18 +13,11 @@ const handleRequest = frames(async (ctx) => {
   return {
     image: (
       <span>
-        {ctx.pressedButton
-          ? `I clicked ${ctx.searchParams.value}`
-          : `Click some button`}
+        This is a placeholder.
       </span>
     ),
+    textInput: 'Enter a message',
     buttons: [
-      <Button key='yes' action="post" target={`${base}/?value=Yes`}>
-        Say Yes
-      </Button>,
-      <Button key='no' action="post" target={`${base}/?value=No`}>
-        Say No
-      </Button>,
     ],
   };
 });
