@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
         }}>
             <h1>No one has chatted here yet.</h1>
             <h2>You Should Be the First! ;)</h2>
+            <div>(You may need to refresh below to see chats)</div>
         </div>
     );
 
@@ -102,7 +103,7 @@ export async function GET(req: NextRequest) {
             ]
         })
         const png = await sharp(Buffer.from(svg)).png().toBuffer();
-        return new NextResponse(png, { status: 200, headers: { 'Content-Type': 'image/png' }})
+        return new NextResponse(png, { status: 200, headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=0, no-cache' }})
     } catch (e) {
         console.log(`error: ${e}`)
         return NextResponse.json({ message: 'Invalid GET Method' }, { status: 404 });

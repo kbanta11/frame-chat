@@ -31,12 +31,12 @@ export async function GET(req: NextRequest) {
             messages = messagesSnapshot.docs.reverse().map((doc: any) => doc.data().timestamp);
             //get newest doc
             newestDoc = (await db.collection('regular').doc(channel === 'undefined' || channel === 'null' || !channel ? '(null)' : channel).collection('messages').orderBy('timestamp', 'desc').limit(1).get()).docs[0].data();
-            return NextResponse.json({ messages: messages, newestTimestamp: newestDoc.timestamp }, { status: 200, headers: { 'Content-Type': 'application/json' }})
+            return NextResponse.json({ messages: messages, newestTimestamp: newestDoc.timestamp }, { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=0' }})
         }
 
         //get newest doc
         newestDoc = (await db.collection('regular').doc('(null)').collection('messages').orderBy('timestamp', 'desc').limit(1).get()).docs[0].data();
-        return NextResponse.json({ messages: undefined, newestTimestamp: undefined }, { status: 200, headers: { 'Content-Type': 'application/json' }})
+        return NextResponse.json({ messages: undefined, newestTimestamp: undefined }, { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=0' }})
     } catch (e) {
         console.log(`error: ${e}`)
         return NextResponse.json({ message: 'Invalid GET Method' }, { status: 404 });

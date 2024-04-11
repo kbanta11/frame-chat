@@ -14,14 +14,43 @@ export const revalidate = 0;
 
 const handleRequest = frames(async (ctx) => {
   const base = new URL(
-    "/frames/regular",
+    "/frames/last-only",
     process.env.NEXT_PUBLIC_HOST
       ? `https://${process.env.NEXT_PUBLIC_HOST}`
       : "http://localhost:3000"
   )
+  let state = ctx.state;
+
+  if (ctx.searchParams.started !== 'true' && state.started !== true) {
+    return {
+      image: (
+        <div tw='flex flex-col p-4 justify-start' style={{
+            width: "100%", 
+            height: "100%",
+        }}>
+            <div tw='flex justify-center' style={{
+                backgroundColor: 'salmon'
+            }}>
+                <h2>Context-Free Chat: {channel === 'undefined' || channel === undefined || channel === 'null' ? 'General' : `/${channel}`}</h2>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', fontSize: '3rem', paddingTop: '1rem', width: '100%', textAlign: 'center' }}>
+              <div>Get started to view the last message.</div>
+            </div>
+        </div>
+      ),
+      imageOptions: {
+        aspectRatio: '1:1',
+      },
+      buttons: [
+        <Button key="start" action="post" target={`${base}/?started=true`}>Let&apos;s Start!</Button>
+      ],
+    }
+  } else {
+    state = {...ctx.state, started: true};
+  }
 
   if (ctx.pressedButton && ctx.message?.buttonIndex === 1 && ctx.message?.inputText) {
-    const response = await fetch(`${base.toString().replace('/frames/regular', `/api/regular/send-message`)}`, {
+    const response = await fetch(`${base.toString().replace('/frames/last-only', `/api/last-only/send-message`)}`, {
         method: 'POST',
         headers: {
             'content-type': 'application/json',
@@ -34,16 +63,22 @@ const handleRequest = frames(async (ctx) => {
         })
     });
 
-    const { success } = await response.json();
+    await response.json();
+    state = {...state, revealed: true}
   }
 
   const res = await fetch(
-    `${base.toString().replace('/frames/regular', `/api/regular/get-page-values?channel=${channel}&direction=${ctx.searchParams.direction}&timestamp=${ctx.searchParams.timestamp ?? Date.now()}`)}&refresh=${Date.now()}`,
+    `${base.toString().replace('/frames/last-only', `/api/last-only/get-page-values?channel=${channel}&revealed=${state.revealed ?? false}&direction=${ctx.searchParams.direction}&timestamp=${ctx.searchParams.timestamp ?? Date.now()}`)}&refresh=${Date.now()}`,
   );
-  const data = await res.json();
 
-  const imgUrl = base.toString().replace('/frames/regular', `/api/regular/get-messages?channel=${channel}&direction=${ctx.searchParams.direction}&timestamp=${ctx.searchParams.timestamp ?? Date.now()}&refresh=${Date.now()}`);
-  
+  let data = {
+    messages: [undefined, undefined],
+    newestTimestamp: undefined,
+  };
+  if(res.ok) {
+    data = await res.json();
+  }
+  const imgUrl = base.toString().replace('/frames/last-only', `/api/last-only/get-messages?channel=${channel}&revealed=${state.revealed ?? false}&direction=${ctx.searchParams.direction}&timestamp=${ctx.searchParams.timestamp ?? Date.now()}&refresh=${Date.now()}`);
   const buttons: [any, any, any, any] = [
       <Button key='send' action="post" target={`${base}/`}>
         Send Message
@@ -61,7 +96,7 @@ const handleRequest = frames(async (ctx) => {
 
   const undefinedElementIndex = buttons.findIndex((b) => !b)
   if (undefinedElementIndex) {
-    buttons[undefinedElementIndex] = <Button key="refresh" action="post" target={`${base}/${channel ?? ''}`}>Refresh 🔄</Button>
+    buttons[undefinedElementIndex] = <Button key="refresh" action="post" target={`${base}/`}>Refresh 🔄</Button>
   }
 
   return {
@@ -71,6 +106,7 @@ const handleRequest = frames(async (ctx) => {
     },
     textInput: 'Enter a message',
     buttons: buttons,
+    state: state,
   };
 }, {
     middleware: [

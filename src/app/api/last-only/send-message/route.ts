@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     
     try {
         if(channel === undefined || channel === null) {
-            const docRef = db.collection('regular').doc('(null)').collection('messages').doc();
+            const docRef = db.collection('last-only').doc('(null)').collection('messages').doc();
             await docRef.set({
                 fid: fid,
                 name: name,
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
                 timestamp: Date.now()
             });
         } else {
-            const docRef = db.collection('regular').doc(`/${channel}`).collection('messages').doc();
+            const docRef = db.collection('last-only').doc(`/${channel}`).collection('messages').doc();
             await docRef.set({
                 fid: fid,
                 name: name,
